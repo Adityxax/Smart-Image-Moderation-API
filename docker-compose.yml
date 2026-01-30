@@ -1,0 +1,61 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      EASYOCR_MODULE_PATH: /app/.easyocr
+      FACE_MODEL_DIR: /app/.models
+      DEVICE: cpu
+    volumes:
+      - ./uploads:/app/uploads
+      - ./.easyocr:/app/.easyocr
+      - ./.models:/app/.models
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart_worker
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: celery -A backend.app.celery_app.celery worker -l info --concurrency=2
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      EASYOCR_MODULE_PATH: /app/.easyocr
+      FACE_MODEL_DIR: /app/.models
+      DEVICE: cpu
+    volumes:
+      - ./uploads:/app/uploads
+      - ./.easyocr:/app/.easyocr
+      - ./.models:/app/.models
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: smart_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+

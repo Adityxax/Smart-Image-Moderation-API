@@ -1,0 +1,39 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV DEBIAN_FRONTEND=noninteractive
+ENV EASYOCR_MODULE_PATH=/app/.easyocr
+ENV DEVICE=cpu
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    tesseract-ocr \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps (NO TORCH, NO ULTRALYTICS)
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir \
+        easyocr \
+        opencv-python-headless \
+        numpy \
+        celery \
+        redis \
+        pydantic
+
+COPY backend /app/backend
+
+RUN mkdir -p /app/uploads /app/.easyocr /app/.models && \
+    useradd -m workeruser && \
+    chown -R workeruser:workeruser /app
+
+USER workeruser
+
+CMD ["celery", "-A", "backend.app.celery_app.celery", "worker", "-l", "info", "--concurrency=2"]
