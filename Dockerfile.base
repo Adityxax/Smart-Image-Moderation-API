@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DEVICE=cpu
+ENV EASYOCR_MODULE_PATH=/app/.easyocr
+
+WORKDIR /app
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    tesseract-ocr \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
+# Install CPU-only Torch FIRST
+RUN pip install --no-cache-dir \
+    torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install ML stack
+RUN pip install --no-cache-dir \
+    easyocr \
+    opencv-python-headless \
+    numpy
+
+# Model + cache dirs
+RUN mkdir -p /app/.easyocr /app/.models

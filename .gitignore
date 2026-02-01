@@ -1,0 +1,156 @@
+# ==========================
+# PYTHON CORE
+# ==========================
+__pycache__/
+*.py[codz]
+*$py.class
+
+# C extensions
+*.so
+
+# ==========================
+# DISTRIBUTION / PACKAGING
+# ==========================
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================
+# INSTALLER / LOGS
+# ==========================
+pip-log.txt
+pip-delete-this-directory.txt
+*.log
+
+# ==========================
+# TESTING / COVERAGE
+# ==========================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# ==========================
+# JUPYTER / IPYTHON
+# ==========================
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ==========================
+# LEGACY WINDOWS (NUKE IT)
+# ==========================
+legacy_windows/
+*.bat
+
+# ==========================
+# ENVIRONMENTS / SECRETS
+# ==========================
+.env
+.envrc
+.venv
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# ==========================
+# TYPE CHECKERS / LINT
+# ==========================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ==========================
+# IDE / EDITORS
+# ==========================
+.vscode/
+.spyderproject
+.spyproject
+.ropeproject
+.idea/
+
+# ==========================
+# DOCUMENTATION
+# ==========================
+docs/_build/
+site/
+
+# ==========================
+# PYTHON BUILD TOOLS
+# ==========================
+.pybuilder/
+target/
+
+# ==========================
+# TASK QUEUES
+# ==========================
+celerybeat-schedule
+celerybeat.pid
+
+# ==========================
+# MACHINE LEARNING / OCR
+# ==========================
+.easyocr/
+.models/
+
+# ==========================
+# RUNTIME / USER DATA
+# ==========================
+uploads/
+
+# ==========================
+# DOCKER
+# ==========================
+docker-data/
+*.pid
+*.log
+**/tmp/
+**/.docker/
+
+# ==========================
+# OS FILES
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# MISC TOOLS
+# ==========================
+.pypirc
+.cursorignore
+.cursorindexingignore
+
+# ==========================
+# MARIMO
+# ==========================
+marimo/_static/
+marimo/_lsp/
+__marimo__/

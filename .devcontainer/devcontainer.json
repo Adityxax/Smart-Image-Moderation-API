@@ -1,0 +1,28 @@
+{
+  "name": "Smart Image Moderation API (Prod-Parity Dev)",
+
+  "dockerComposeFile": ["${localWorkspaceFolder}/docker-compose.yml"],
+  "service": "api",
+
+  "workspaceFolder": "/app",
+
+  "forwardPorts": [8000, 6379],
+  "shutdownAction": "stopCompose",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.analysis.autoSearchPaths": true,
+        "python.analysis.extraPaths": ["/app"],
+        "python.analysis.useLibraryCodeForTypes": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
