@@ -31,3 +31,4 @@ celery.conf.update(
 
 # Only scan the tasks module, not the whole app
 celery.autodiscover_tasks(["backend.app.tasks"])
+
