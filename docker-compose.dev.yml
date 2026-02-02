@@ -1,0 +1,6 @@
+services:
+  worker:
+    command: celery -A backend.app.celery_app.celery worker -l info --concurrency=1
+
+  redis:
+    command: redis-server --save "" --appendonly no

@@ -20,6 +20,7 @@ PROTO_PATH = os.path.join(MODELS_DIR, "deploy.prototxt")
 MODEL_PATH = os.path.join(MODELS_DIR, "res10_300x300_ssd_iter_140000.caffemodel")
 
 EASYOCR_PATH = os.getenv("EASYOCR_MODULE_PATH", "/app/.easyocr")
+UPLOAD_DIR = "/app/uploads"
 
 os.makedirs(EASYOCR_PATH, exist_ok=True)
 
@@ -47,23 +48,38 @@ print("[ML] Face detector loaded")
 # -------------------------
 # HELPERS
 # -------------------------
-def detect_faces(image):
+def detect_faces_with_boxes(image):
+    """
+    Returns list of face bounding boxes:
+    [{x, y, w, h}, ...]
+    """
     h, w = image.shape[:2]
+
     blob = cv2.dnn.blobFromImage(
         cv2.resize(image, (300, 300)),
         1.0,
         (300, 300),
-        (104.0, 177.0, 123.0)
+        (104.0, 177.0, 123.0),
     )
+
     face_net.setInput(blob)
     detections = face_net.forward()
 
-    count = 0
+    boxes = []
     for i in range(detections.shape[2]):
-        confidence = detections[0, 0, i, 2]
+        confidence = float(detections[0, 0, i, 2])
         if confidence > 0.5:
-            count += 1
-    return count
+            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+            (x1, y1, x2, y2) = box.astype("int")
+
+            boxes.append({
+                "x": int(max(0, x1)),
+                "y": int(max(0, y1)),
+                "w": int(max(0, x2 - x1)),
+                "h": int(max(0, y2 - y1)),
+            })
+
+    return boxes
 
 
 def blur_score(image):
@@ -87,7 +103,7 @@ def process_image(image_path: str) -> dict:
         return {
             "status": "failed",
             "device": DEVICE,
-            "error": "Image not found"
+            "error": "Image not found",
         }
 
     image = cv2.imread(image_path)
@@ -95,7 +111,7 @@ def process_image(image_path: str) -> dict:
         return {
             "status": "failed",
             "device": DEVICE,
-            "error": "Invalid image"
+            "error": "Invalid image",
         }
 
     # ---------- Resize for speed ----------
@@ -106,7 +122,7 @@ def process_image(image_path: str) -> dict:
         image = cv2.resize(image, (int(w * scale), int(h * scale)))
 
     # ---------- Face Detection ----------
-    faces = detect_faces(image)
+    face_boxes = detect_faces_with_boxes(image)
 
     # ---------- OCR ----------
     ocr_results = reader.readtext(image)
@@ -123,13 +139,18 @@ def process_image(image_path: str) -> dict:
     resolution_score = min(image.shape[0], image.shape[1]) / 1000
     quality_score = round(min((blur_val / 100) + resolution_score, 1.0), 2)
 
+    # ---------- Frontend-friendly image URL ----------
+    filename = os.path.basename(image_path)
+    image_url = f"/uploads/{filename}"
+
     return {
         "status": "success",
         "device": DEVICE,
-        "image_path": image_path,
+        "image_path": image_url,
         "nsfw": nsfw_flag,
         "nsfw_score": round(nsfw_val, 3),
-        "faces_detected": faces,
+        "faces_detected": len(face_boxes),
+        "faces": face_boxes,
         "ocr_text": text,
         "blur_score": round(blur_val, 2),
         "quality_score": quality_score,
@@ -138,6 +159,6 @@ def process_image(image_path: str) -> dict:
             "face": "opencv-dnn",
             "ocr": "easyocr",
             "nsfw": "heuristic-v1",
-            "device": "cpu"
-        }
+            "device": DEVICE,
+        },
     }

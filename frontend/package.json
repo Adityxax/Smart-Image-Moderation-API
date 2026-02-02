@@ -1,0 +1,35 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+
+  "scripts": {
+    "dev": "set NEXT_DISABLE_TURBO=1 && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+
+    "backend": "docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml up",
+    "dev:full": "concurrently \"npm run dev\" \"npm run backend\""
+  },
+
+  "dependencies": {
+    "axios": "^1.6.7",
+    "next": "^16.1.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "25.2.0",
+    "@types/react": "19.2.10",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.1.6",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.4.5"
+  }
+}
