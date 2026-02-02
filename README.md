@@ -1,267 +1,383 @@
-# 🧠 Smart Image Moderation & Analysis API (Mini SaaS)
+# 🧠 Smart Image Moderation & Analysis API
 
-A **containerized, asynchronous image analysis platform** that lets users upload images and receive automated moderation and insight results through a clean, production-style API.
+*A full-stack, async, Dockerized, ML-powered image analysis platform*
 
-Think **AWS Rekognition, but student-budget and engineer-brain powered**.
-
-This system follows real-world backend and DevOps patterns including microservice-style architecture, background job processing, persistent model caching, and health-based startup orchestration.
+A production-style system that allows users to upload an image and receive real-time insights including NSFW detection, face counting, OCR text extraction, and image quality metrics — all backed by an asynchronous, containerized ML pipeline and a modern frontend dashboard.
 
 ---
 
 ## 🚀 Features
 
-* 🔞 **NSFW Content Detection** (lightweight heuristic-based)
-* 🧍 **Face Detection** (OpenCV DNN)
+### Image Analysis
+
+* 🔞 **NSFW / Sensitive Content Detection** (HSV-based heuristic)
+* 🧍 **Face Detection** (OpenCV DNN – SSD Caffe model)
 * 🔤 **OCR Text Extraction** (EasyOCR)
 * 🌀 **Blur Detection** (Laplacian variance)
-* 📐 **Image Quality Scoring** (resolution-based)
+* 📐 **Image Quality Scoring** (resolution + sharpness)
 * ⚡ **Processing Time Tracking**
-* 🔁 **Asynchronous Job Handling** (FastAPI + Celery)
-* 📦 **Fully Containerized Deployment** (Docker + Docker Compose)
+* 🧪 **Model Metadata Reporting**
+
+### System Capabilities
+
+* 🔁 **Asynchronous ML Processing** (Celery + Redis)
+* 📦 **Fully Dockerized Architecture**
+* 🖥️ **Frontend Dashboard** (Next.js + Tailwind)
+* 🛠️ **Dev / Prod Environment Separation**
+* 🚦 **Health Checks + Service Orchestration**
 
 ---
 
-## 🏗️ System Architecture
+## 🧩 The Idea
 
-This project follows a **microservices-style, asynchronous processing pipeline** designed for scalability, reliability, and fast API response times.
+Build a **hosted API + frontend dashboard** where users can upload an image and receive:
 
-### Core Components
-
-### 1️⃣ FastAPI (API Service)
-
-* Accepts image uploads
-* Returns a `job_id` immediately
-* Exposes `/result/{job_id}` for result retrieval
-* Serves OpenAPI documentation at `/docs`
-* Health endpoint for service orchestration
-
-### 2️⃣ Celery (Worker Service)
-
-* Runs ML tasks asynchronously
-* Loads models once per worker
-* Processes images from shared volumes
-* Stores results in Redis
-
-### 3️⃣ Redis
-
-* Message broker for Celery
-* Result backend for job storage
-* Health dependency for startup order
+* NSFW / sensitive content flag
+* Face count
+* OCR-extracted text
+* Image quality metrics (blur + resolution)
+* Processing time and model metadata
 
 ---
 
-## 🔄 Processing Pipeline
+## 🏗️ Architecture Overview
+
+### 🔹 Frontend (Next.js + Tailwind)
+
+* Upload UI with image preview
+* Polling-based live status updates
+* Styled results dashboard
+* Custom fonts (Bungee + Roboto Condensed)
+* Themed UI with blur, glow, gradients, and purple-glass cards
+
+### 🔹 Backend (FastAPI)
+
+* REST API:
+
+  * `POST /upload` → Upload image and queue job
+  * `GET /result/{job_id}` → Fetch processing status/results
+  * `GET /health` → Service health check
+
+### 🔹 Async Task System
+
+* **Celery** → Background ML processing
+* **Redis** → Message broker + result backend
+* ML runs in workers, not in the API thread
+
+### 🔹 ML Pipeline (CPU-Only, Production-Safe)
+
+* OpenCV DNN → Face detection
+* EasyOCR → Text extraction
+* Heuristic NSFW scoring → HSV skin-tone detection
+* Blur detection → Laplacian variance
+* Quality scoring → Resolution + sharpness formula
+
+### 🔹 Docker
+
+Multi-container setup:
+
+* `smart_api` → FastAPI server
+* `smart_worker` → Celery ML worker
+* `smart_redis` → Redis broker
+* Dev + Prod Docker Compose configs
+
+---
+
+## 🔄 Processing Flow
 
 ### Upload Flow
 
-1. User uploads an image via `POST /upload`
-2. API stores the image in `/uploads`
-3. API pushes a job to Redis
-4. Celery worker picks up the task
-5. ML pipeline processes the image
-6. Results are stored in Redis
-7. User polls `GET /result/{job_id}` to retrieve output
+1. User uploads an image
+2. FastAPI:
+
+   * Saves file to `/uploads`
+   * Generates a `job_id`
+   * Queues a Celery task
+3. Returns `job_id` instantly
+
+### Worker Flow
+
+1. Celery worker:
+
+   * Lazy-loads ML models
+   * Runs:
+
+     * Face detection
+     * OCR
+     * Blur scoring
+     * NSFW heuristic
+2. Packages result as JSON
+3. Stores output in Redis
+
+### Result Flow
+
+Frontend polls:
+
+```http
+GET /result/{job_id}
+```
+
+Until:
+
+```json
+status = "success"
+```
+
+Then renders:
+
+* NSFW status
+* Faces detected
+* OCR text
+* Blur score
+* Quality score
+* Processing time
+* Model metadata
 
 ---
 
-## 🧠 ML & Computer Vision Stack
+## 🧪 ML Pipeline Design
 
 ### Face Detection
 
-* **OpenCV DNN (SSD-based Caffe Model)**
+* OpenCV SSD (Caffe model)
+* Confidence thresholding
 * Lightweight and CPU-friendly
-* No GPU or PyTorch dependency
-
-**Model Files:**
-
-* `deploy.prototxt`
-* `res10_300x300_ssd_iter_140000.caffemodel`
 
 ### OCR
 
-* **EasyOCR**
-* CPU mode
-* Persistent model cache via Docker volumes
+* EasyOCR (English)
+* Auto model caching via Docker volume
 
-### Image Quality Analysis
+### Blur Detection
 
-* Blur detection using **Laplacian variance**
-* Resolution-based quality scoring
-* End-to-end processing time measurement
+* Laplacian variance
 
-### NSFW Detection
+  * High = sharp
+  * Low = blurry
 
-* **HSV-based skin ratio heuristic**
-* Lightweight placeholder for future ML-based classifiers
+### NSFW Heuristic
 
----
+* HSV skin-tone masking
+* Pixel ratio scoring
+* Threshold-based classification
 
-## 🐳 Containerization Strategy
+### Quality Score
 
-### Docker Architecture
+* Combines:
 
-### Base Image (`Dockerfile.base`)
-
-Pre-installs all heavy dependencies once:
-
-* Python 3.11
-* OpenCV
-* EasyOCR
-* NumPy
-* System libraries (Tesseract, GL, build tools)
-
-This prevents repeated downloads of large ML packages during rebuilds.
-
-### App Image (`Dockerfile`)
-
-* Inherits from `smart-ml-base:cpu`
-* Installs lightweight app dependencies
-* Copies backend source code
-* Creates runtime directories
-* Runs the FastAPI server
+  * Resolution
+  * Sharpness
+* Normalized and capped at `1.0`
 
 ---
 
-## 🧩 Docker Compose Services
+## 🎨 Frontend Evolution
 
-### Services
+### Started As
 
-| Service  | Role                            |
-| -------- | ------------------------------- |
-| `api`    | FastAPI server (port `8000`)    |
-| `worker` | Celery background processor     |
-| `redis`  | Message broker + result backend |
+> “Choose file. Button. Black screen.”
 
-### Health-Based Startup
+### Ended As
 
-* API and Worker wait for Redis to become healthy
-* Prevents race conditions during system startup
+* Themed galaxy-style background
+* Gradient + blur overlay
+* Purple-glass cards
+* Image preview panel
+* Hover-glow buttons
+* Clean results dashboard
 
----
+### UX Features
 
-## 📂 Persistent Volumes
+* Upload preview
+* Disabled + loading states
+* Error handling
+* Structured result layout
 
-| Directory   | Purpose                      |
-| ----------- | ---------------------------- |
-| `uploads/`  | Stores uploaded images       |
-| `.easyocr/` | OCR model cache              |
-| `models/`   | OpenCV face detection models |
-
-### Benefits
-
-* No re-downloading of models
-* Faster cold starts
-* Images persist across container restarts
+This turned a backend tool into a **demo-ready product**.
 
 ---
 
-## 🌐 API Endpoints
+## 🐳 DevOps & Docker
 
-### Upload Image
+### Containers
 
-**POST** `/upload`
+* API
+* Worker
+* Redis
 
-**Response**
+### Volumes
+
+* OCR model caching
+* Upload persistence
+
+### Health Checks
+
+* Redis health monitoring
+* API `/health` endpoint
+
+### Environments
+
+* Separate dev and prod compose files
+* Local dev supports hot reload + async workers
+
+---
+
+## ⚡ One-Command Full Stack Startup
+
+Added:
 
 ```json
-{
-  "job_id": "uuid",
-  "status": "processing"
-}
+"dev:full": "concurrently \"npm run dev\" \"npm run backend\""
 ```
 
-### Get Result
-
-**GET** `/result/{job_id}`
-
-**Response**
-
-```json
-{
-  "status": "success",
-  "result": {
-    "nsfw": false,
-    "faces_detected": 0,
-    "ocr_text": "Detected text",
-    "blur_score": 907.64,
-    "quality_score": 1.0,
-    "processing_time": 1.62,
-    "model": {
-      "face": "opencv-dnn",
-      "ocr": "easyocr",
-      "nsfw": "heuristic-v1",
-      "device": "cpu"
-    }
-  }
-}
-```
-
----
-
-## 🛠️ DevOps Highlights
-
-* **Health-Based Startup Ordering**
-* **Layered Docker Builds**
-* **Asynchronous Job Queue**
-* **Horizontally Scalable Workers**
-* **Persistent Model Caching**
-* **Clean OpenAPI Interface**
-
----
-
-## ▶️ How to Run
-
-### First-Time Setup
+Now:
 
 ```bash
-docker build -t smart-ml-base:cpu -f Dockerfile.base .
-docker compose up --build
+npm run dev:full
 ```
 
-### Daily Startup
+Starts:
 
-```bash
-docker compose up
-```
-
-### Stop System
-
-```bash
-docker compose down
-```
+* Next.js frontend
+* Docker backend
+* Redis
+* Celery workers
 
 ---
 
-## 💪 System Design Strengths
+## 🔀 Git & GitHub Workflow
 
-* ✅ Fully containerized
-* ✅ Asynchronous ML processing
-* ✅ Production-style architecture
-* ✅ Persistent model caching
-* ✅ Scalable worker system
-* ✅ Clean API interface
-* ✅ Student-budget infrastructure
+### Flow Used
+
+* Feature branch: `feature/frontend-dashboard`
+* Pull Request into `main`
+* Clean merge
+* Branch deleted after success
+
+### PR Included
+
+* Frontend dashboard
+* Dev / prod Docker setup
+* Concurrent startup scripts
+* Backend integration updates
 
 ---
 
-## 🌱 Future Upgrade Paths
+## 📋 Features Checklist
 
-* Replace NSFW heuristic with **CLIP / ViT-based classifier**
-* Add **GPU workers** using CUDA containers
-* Store results in **PostgreSQL** instead of Redis
-* Add **authentication and API keys**
-* Deploy with **Docker Swarm / Kubernetes**
-* Add **rate limiting & usage analytics**
+### Backend
+
+* Async ML processing
+* REST API
+* Redis queue
+* CPU-safe ML pipeline
+* Dockerized deployment
+
+### Frontend
+
+* Upload UI
+* Live job polling
+* Results dashboard
+* Image preview
+* Styled cards
+* Custom fonts
+* Glow effects
+* Themed background
+
+### Dev Experience
+
+* One-command startup
+* Dev / prod separation
+* Clean Git history
+* Release-ready structure
+
+---
+
+## 🧠 What This Project Demonstrates
+
+* ✅ Distributed systems
+* ✅ Async task queues
+* ✅ ML pipeline design
+* ✅ Docker orchestration
+* ✅ API architecture
+* ✅ Frontend integration
+* ✅ DevOps workflows
+* ✅ GitHub collaboration
+
+Built a **Mini SaaS platform for ML image moderation**.
+
+---
+
+## 🔮 Future Upgrades
+
+* JWT / API Key authentication
+* Rate limiting
+* GPU worker support (CUDA containers)
+* Cloud deployment (Fly.io / Railway / AWS)
+* Public demo URL
+* PostgreSQL result persistence
 
 ---
 
 ## 👤 Author
 
 **Adi**
-Backend, DevOps & Computer Vision Engineer
+Backend, DevOps & ML Engineer
 
 ---
 
 ## ⭐ Star This Repo
 
-If this saved you from Docker-induced emotional damage, drop a star. The algorithm and my sanity both appreciate it.
+If this project helped you or inspired you, consider giving it a star. It helps others discover the project and keeps the motivation flowing.
+
+---
+
+## 🏷️ Tech Stack Badges
+
+
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+
+
+---
+
+## 🗺️ System Architecture Diagram
+
+```text
++---------------------+
+|     Frontend       |
+|  Next.js + UI      |
++----------+----------+
+           |
+           | HTTP (Upload / Poll)
+           v
++---------------------+
+|      FastAPI       |
+|  /upload /result  |
++----------+----------+
+           |
+           | Task Queue
+           v
++---------------------+
+|       Redis        |
+| Broker + Results  |
++----------+----------+
+           |
+           | Consume
+           v
++---------------------+
+|   Celery Worker   |
+|  ML Pipeline      |
++----------+----------+
+           |
+           | Models / Files
+           v
++---------------------+
+| Volumes / Models  |
+| uploads / OCR /  |
+| face models       |
++---------------------+
+```
