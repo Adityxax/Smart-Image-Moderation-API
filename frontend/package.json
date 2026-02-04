@@ -10,7 +10,7 @@
     "lint": "eslint",
 
     "backend": "docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml up",
-    "dev:full": "concurrently \"npm run dev\" \"npm run backend\""
+    "dev:full": "concurrently \"npm run dev\" \"docker compose -f ../docker-compose.yml -f ../docker-compose.dev.yml up\""
   },
 
   "dependencies": {

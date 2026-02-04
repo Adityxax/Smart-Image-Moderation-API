@@ -2,11 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-
-  allowedDevOrigins: [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-  ],
+  reactStrictMode: true,
 };
 
 export default nextConfig;
