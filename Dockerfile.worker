@@ -18,18 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Python deps (NO TORCH, NO ULTRALYTICS)
+# Python deps
+COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir \
-        easyocr \
-        opencv-python-headless \
-        numpy \
-        celery \
-        redis \
-        pydantic
+    pip install --no-cache-dir -r /tmp/requirements.txt
 
+# App code
 COPY backend /app/backend
 
+# Setup
 RUN mkdir -p /app/uploads /app/.easyocr /app/.models && \
     useradd -m workeruser && \
     chown -R workeruser:workeruser /app

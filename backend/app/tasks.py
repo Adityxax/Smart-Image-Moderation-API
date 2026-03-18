@@ -10,16 +10,9 @@ logger = logging.getLogger(__name__)
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 5},
+    retry_backoff=True,
 )
 def run_image_analysis(self, image_path: str):
-    """
-    Run the ML pipeline on an image path.
-
-    - Lazy-loads ML models inside the worker
-    - Retries on transient failures
-    - Emits live progress states for frontend polling
-    - Returns structured errors instead of crashing the worker
-    """
 
     def step(name: str):
         self.update_state(
@@ -33,17 +26,17 @@ def run_image_analysis(self, image_path: str):
     try:
         step("Loading image")
 
-        # Import ML only inside worker process
+        # Lazy import inside worker
         from backend.app.ml.processor import process_image
 
         step("Running NSFW detection")
-        time.sleep(0.3)
+        time.sleep(0.2)
 
         step("Detecting faces")
-        time.sleep(0.3)
+        time.sleep(0.2)
 
         step("Running OCR")
-        time.sleep(0.3)
+        time.sleep(0.2)
 
         step("Analyzing quality")
 
@@ -51,15 +44,21 @@ def run_image_analysis(self, image_path: str):
 
         step("Finalizing results")
 
-        # Attach processing time if not already added
-        if isinstance(result, dict):
-            result["processing_time"] = round(time.time() - start_time, 2)
-            result["status"] = "success"
+        # 🔥 IMPORTANT: enforce clean JSON-safe output
+        if not isinstance(result, dict):
+            raise ValueError("process_image must return dict")
+
+        result = {
+            **result,
+            "processing_time": round(time.time() - start_time, 2),
+            "status": "success"
+        }
 
         return result
 
     except Exception as e:
         logger.exception(f"[TASK] Failed processing image: {image_path}")
+
         return {
             "status": "failed",
             "error": str(e),

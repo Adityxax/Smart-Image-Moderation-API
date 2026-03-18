@@ -12,20 +12,15 @@ from backend.app.celery_app import celery
 from fastapi.staticfiles import StaticFiles
 
 # -------------------------
-# STATIC FILES (UPLOADS)    
-#--------------------------
-app.mount("/uploads", StaticFiles(directory="/app/uploads"), name="uploads")
-
-
-# -------------------------
 # APP SETUP
-# -------------------------
 app = FastAPI(
     title="Smart Image Moderation API",
     version="1.0.0",
     description="Async image moderation API with OCR, face detection, NSFW scoring, and quality metrics (CPU mode)"
 )
 
+# STATIC FILES
+app.mount("/uploads", StaticFiles(directory="/app/uploads"), name="uploads")
 # -------------------------
 # CORS (FRONTEND FRIENDLY)
 # -------------------------
