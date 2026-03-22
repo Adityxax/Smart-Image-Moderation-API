@@ -5,7 +5,7 @@ import uuid
 import os
 import redis
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from backend.app.tasks import run_image_analysis
 from backend.app.celery_app import celery
@@ -58,6 +58,7 @@ class ImageResult(BaseModel):
     nsfw: bool
     nsfw_score: float
     faces_detected: int
+    faces: List[Dict[str, Any]] = []
     ocr_text: str
     blur_score: float
     quality_score: float

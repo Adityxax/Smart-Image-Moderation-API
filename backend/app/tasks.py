@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 @celery.task(
     name="backend.app.tasks.run_image_analysis",
     bind=True,
-    autoretry_for=(Exception,),
+    autoretry_for=(IOError, OSError, ConnectionError),
     retry_kwargs={"max_retries": 3, "countdown": 5},
     retry_backoff=True,
 )

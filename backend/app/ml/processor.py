@@ -154,7 +154,6 @@ def process_image(image_path: str) -> dict:
         "ocr_text": text,
         "blur_score": round(blur_val, 2),
         "quality_score": quality_score,
-        "processing_time": round(time.time() - start, 2),
         "model": {
             "face": "opencv-dnn",
             "ocr": "easyocr",
