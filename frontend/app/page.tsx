@@ -111,8 +111,8 @@ export default function HomePage() {
             />
 
             {preview && (
-              <div className="rounded-lg overflow-hidden border border-white/20 bg-black">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="rounded-lg overflow-hidden border border-white/20 bg-black relative">
+                {loading && <div className="scan-line animate-scan" />}
                 <img
                   src={preview}
                   alt="Preview"

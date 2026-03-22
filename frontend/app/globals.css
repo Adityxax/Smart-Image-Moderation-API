@@ -37,3 +37,22 @@ body {
 ::-webkit-scrollbar-track {
   background: #1e1e1e;
 }
+/* Scanning Animation */
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to bottom, transparent, #a855f7, transparent);
+  box-shadow: 0 0 15px #a855f7;
+  z-index: 20;
+}
