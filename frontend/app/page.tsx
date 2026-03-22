@@ -112,6 +112,7 @@ export default function HomePage() {
 
             {preview && (
               <div className="rounded-lg overflow-hidden border border-white/20 bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={preview}
                   alt="Preview"
