@@ -11,6 +11,15 @@ from backend.app.tasks import run_image_analysis
 from backend.app.celery_app import celery
 from fastapi.staticfiles import StaticFiles
 
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from backend.app.database import engine, get_db
+from backend.app import models
+
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
+
+
 # -------------------------
 # APP SETUP
 app = FastAPI(
@@ -125,7 +134,7 @@ def health():
 
 
 @app.post("/upload", response_model=UploadResponse, tags=["jobs"])
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
@@ -138,6 +147,7 @@ async def upload_image(file: UploadFile = File(...)):
 
     job_uuid = str(uuid.uuid4())
     file_path = os.path.join(UPLOAD_DIR, f"{job_uuid}{ext}")
+    public_url = f"/uploads/{job_uuid}{ext}"
 
     # Chunked write (RAM-safe)
     try:
@@ -147,8 +157,17 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
+    # Add pending record to DB
+    db_record = models.ImageAnalysisRecord(
+        id=job_uuid,
+        image_path=public_url,
+        status="pending"
+    )
+    db.add(db_record)
+    db.commit()
+
     # Queue Celery task
-    task = run_image_analysis.delay(file_path)
+    task = run_image_analysis.apply_async(args=[file_path], task_id=job_uuid)
 
     return {
         "job_id": task.id,

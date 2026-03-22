@@ -1,4 +1,22 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: smart_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: smart_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -15,6 +33,7 @@ services:
       EASYOCR_MODULE_PATH: /app/.easyocr
       FACE_MODEL_DIR: /app/.models
       DEVICE: cpu
+      DATABASE_URL: postgresql://postgres:password@db:5432/smart_api
     volumes:
       - .:/app
       - ./uploads:/app/uploads
@@ -43,6 +62,7 @@ services:
       EASYOCR_MODULE_PATH: /app/.easyocr
       FACE_MODEL_DIR: /app/.models
       DEVICE: cpu
+      DATABASE_URL: postgresql://postgres:password@db:5432/smart_api
     volumes:
       - .:/app
       - ./uploads:/app/uploads
@@ -66,6 +86,7 @@ services:
       EASYOCR_MODULE_PATH: /app/.easyocr
       FACE_MODEL_DIR: /app/.models
       DEVICE: cpu
+      DATABASE_URL: postgresql://postgres:password@db:5432/smart_api
     volumes:
       - .:/app
       - ./uploads:/app/uploads
@@ -84,3 +105,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+volumes:
+  postgres_data:
