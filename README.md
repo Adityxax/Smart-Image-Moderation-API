@@ -21,6 +21,7 @@ A production-style system that allows users to upload an image and receive real-
 ### System Capabilities
 
 * 🔁 **Asynchronous ML Processing** (Celery + Redis)
+* 🗄️ **Persistent Analysis History** (PostgreSQL)
 * 📦 **Fully Dockerized Architecture**
 * 🖥️ **Frontend Dashboard** (Next.js + Tailwind)
 * 🛠️ **Dev / Prod Environment Separation**
@@ -79,6 +80,7 @@ Multi-container setup:
 * `smart_api` → FastAPI server
 * `smart_worker` → Celery ML worker
 * `smart_redis` → Redis broker
+* `smart_db` → PostgreSQL database
 * Dev + Prod Docker Compose configs
 
 ---
@@ -157,9 +159,9 @@ Then renders:
 
 ### NSFW Heuristic
 
-* HSV skin-tone masking
+* HSV skin-tone masking (H: 0-20, S: 20-255, V: 70-255)
 * Pixel ratio scoring
-* Threshold-based classification
+* Threshold-based classification (> 0.25)
 
 ### Quality Score
 
@@ -201,9 +203,10 @@ This turned a backend tool into a **demo-ready product**.
 
 ### Containers
 
-* API
-* Worker
-* Redis
+* API (FastAPI)
+* Worker (Celery)
+* Broker (Redis)
+* Database (PostgreSQL)
 
 ### Volumes
 
@@ -268,10 +271,12 @@ Starts:
 ### Backend
 
 * Async ML processing
-* REST API
-* Redis queue
+* REST API (FastAPI)
+* Redis queue & Result backend
+* PostgreSQL data persistence
 * CPU-safe ML pipeline
 * Dockerized deployment
+* Health checks & Orchestration
 
 ### Frontend
 
@@ -315,7 +320,6 @@ Built a **Mini SaaS platform for ML image moderation**.
 * GPU worker support (CUDA containers)
 * Cloud deployment (Fly.io / Railway / AWS)
 * Public demo URL
-* PostgreSQL result persistence
 
 ---
 
@@ -365,12 +369,12 @@ If this project helped you or inspired you, consider giving it a star. It helps 
 |       Redis        |
 | Broker + Results  |
 +----------+----------+
-           |
-           | Consume
-           v
-+---------------------+
-|   Celery Worker   |
-|  ML Pipeline      |
+           |          |
+           | Consume  +------> +-------------------+
+           v                   |   PostgreSQL      |
++---------------------+        |   Result Data     |
+|   Celery Worker     | <------+-------------------+
+|  ML Pipeline        |
 +----------+----------+
            |
            | Models / Files
